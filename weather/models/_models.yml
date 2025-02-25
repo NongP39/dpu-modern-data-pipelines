@@ -1,0 +1,18 @@
+version: 2
+
+model:
+  - name : temp_greater_than _25
+    descrition : Temperature that is greater than 25 celcius
+    column:
+      - name: dt
+        description: Datestamp
+        data_tests:
+          - not_null
+      - name: temp
+        description: Temperature in celcius
+        data_tests:
+          - not_null
+      - name: feels_like
+        description: Temperature we feel in celcius
+        data_tests:
+          - null
