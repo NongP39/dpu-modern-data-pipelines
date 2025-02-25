@@ -89,7 +89,7 @@ default_args = {
 with DAG(
     "weather_api_dag",
     default_args=default_args,
-    schedule="0 */3 * * *",
+    schedule="1 * * * *",
     start_date=timezone.datetime(2025, 2, 1),
     tags=["dpu"],
 ):
