@@ -1,7 +1,9 @@
 import json
+from datetime import timedelta
 
 from airflow import DAG
 from airflow.models import Variable
+from airflow.operators.email import EmailOperator
 from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import PythonOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
@@ -14,6 +16,8 @@ DAG_FOLDER = "/opt/airflow/dags"
 
 
 def _get_weather_data():
+    #assert 1 == 2
+
     # API_KEY = os.environ.get("WEATHER_API_KEY")
     API_KEY = Variable.get("weather_api_key")
 
@@ -77,8 +81,14 @@ def _load_data_to_postgres():
     connection.commit()
 
 
+default_args = {
+    "email": ["a.panklai2539@gmail.com"],
+    "retries": 3,
+    "retry_delay": timedelta(minutes=1),
+}
 with DAG(
     "weather_api_dag",
+    default_args=default_args,
     schedule="0 */3 * * *",
     start_date=timezone.datetime(2025, 2, 1),
     tags=["dpu"],
@@ -105,7 +115,15 @@ with DAG(
         python_callable=_load_data_to_postgres,
     )
 
+    send_email = EmailOperator(
+        task_id="send_email",
+        to=["a.panklai2539@gmail.com"],
+        subject="Finished getting open weather data",
+        html_content="เสร็จงานแล้วไอหนุ่ม",
+    )
+
     end = EmptyOperator(task_id="end")
 
-    start >> get_weather_data >> validate_data >> load_data_to_postgres >> end
+    start >> get_weather_data >> validate_data >> load_data_to_postgres >> send_email
     start >> create_weather_table >> load_data_to_postgres
+    send_email >> end
